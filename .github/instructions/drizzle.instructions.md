@@ -45,12 +45,21 @@ import { asc, count, eq } from 'drizzle-orm';
 import type { Database } from './db';
 import { games } from '../../db/schema';
 
+/**
+ * Return all game IDs sorted by title for deterministic static route generation.
+ *
+ * @param db - Drizzle database client used to read the games table.
+ * @returns IDs ordered by title so page generation remains stable across builds.
+ */
 export async function getAllGameIds(db: Database): Promise<number[]> {
   const rows = await db.select({ id: games.id }).from(games).orderBy(asc(games.title));
   return rows.map((r) => r.id);
 }
 ```
 
+- Every exported function in `db/**/*.ts` and `src/lib/*.ts` must have a TSDoc/JSDoc block with a short purpose, `@param` entries, and a `@returns` description when the function returns data
+- Document the injected `db` parameter so the testability pattern is obvious to future contributors and the AI assistant
+- Keep comment text focused on intent and constraints, such as ordering for deterministic builds or why a lookup is shaped a certain way; do not restate the raw SQL or the obvious method names
 - Always `order by` a stable column (title) so static builds are deterministic.
 - Map raw rows to the app-facing `Game`/`Publisher`/`Category` types in one place; don't leak Drizzle row shapes into components.
 - Keep ordering/lookup logic in `games.ts`, not in pages.
